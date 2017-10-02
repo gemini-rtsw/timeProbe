@@ -17,25 +17,14 @@ DEPSCHS = $(wildcard ../*.sch)
 
 # Add target .db files below here. Each must
 # correspond to a .sch file
-# DB += xxx.db
-
-
-# If the module provides subschematics, install them and their
-# symbol files in <top>/templates/schematics
-TEMPLATES_DIR = schematics
-#TEMPLATES += xxx.sch xxx.sym
-
-# If .sym files for EPICS primitives are in this support module,
-# simply install them into <top>/db.
-# If you have .sym files for both primitives and subschematics,
-# you'll need to list them specifically.
-# DB += $(wildcard ../*.sym)
-
+DB += timeProbe.db
 
 include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
+$(COMMON_DIR)/%.db: %.db
+	cp $< $@
 
-clean::
-        $(RM) *.dat *.bak
-
+clean:: myclean
+myclean:
+	$(RM) *.dat *.bak 

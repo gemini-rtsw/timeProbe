@@ -11,19 +11,16 @@ LIBRARY_IOC += timeProbe
 
 # <APPNAME>.dbd will be created and installed
 DBD += timeProbe.dbd
+DBD += timeProbeFuncs.dbd
 
 # timeProbe.dbd will be made up from these files:
 timeProbe_DBD += base.dbd
-# List local .dbd files here
-# timeProbe_DBD += xxx.dbd
-
-# Include dbd files for external support modules:
-# timeProbe_DBD += genSubRecord.dbd
+timeProbe_DBD += bancomm.dbd 
+timeProbe_DBD += geminiRecords.dbd
 
 # specify all source files to be compiled
 # including sequencer (.st) source files
-#timeProbe_SRCS += xxx.c
-#timeProbe_SRCS += xxx.st
+timeProbe_SRCS += timeProbe.c
 
 #=============================
 
