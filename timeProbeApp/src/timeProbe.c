@@ -5,10 +5,19 @@
 #include <bc635.h>
 #include <genSubRecord.h>
 
-#define DEBUG_MODE	*((int *) (pgsub->a))
+/* Debug mode. Set this value to 1 to enable debug messages.
+ */
+#define DEBUG_FLAG	*((long *) (pgsub->a))
 
-#define CARD_FOUND	*((int *) (pgsub->valb))
+/* Time card present. This value is set (once) in initBancomTime
+ * when the record is initialized.
+ */
+#define CARD_FOUND	*((long *) (pgsub->valb))
 
+/* These values are set in the getBancomTime every time the record runs.
+ * The output is an array of four bytes to allow the Linux timeProbe to
+ * read these values in a single get operation.
+ */
 #define CARD_CARDSTAT	*((double *) (pgsub->vala) + 0)
 #define CARD_TIMESTAT	*((double *) (pgsub->vala) + 1)
 #define CARD_TIME	*((double *) (pgsub->vala) + 2)
@@ -45,7 +54,7 @@
 long initBancomTime (struct genSubRecord *pgsub)
 {
     if (bcTestCard() == 0) { /* card found */
-	printf ("initBancomTime: time card found\n");
+	/* printf ("initBancomTime: time card found\n"); */
 	CARD_FOUND = 1;
     } else
 	CARD_FOUND = 0;
@@ -71,7 +80,10 @@ long initBancomTime (struct genSubRecord *pgsub)
  * (bit 2) Frequency offset is too large
  *
  * The output array follow the same conventions of the RPC routines.
- * CAR
+ * 0: CARD_STAT     : 0 if card was found; 1 otherwise
+ * 1: CARD_TIMESTAT : 0 if time read successfuly; 1 otherwise.
+ * 2: CARD_TIME     : time value
+ * 3: CARD_REGS     : time card registers (three bits).
  *
  * PARAMETERS: (">" input, "!" modified, "<" output)  
  * (>) pgsub  (struct genSubRecord *)    Pointer to gensub record structure
@@ -109,13 +121,18 @@ long getBancomTime (struct genSubRecord *pgsub)
     if (CARD_FOUND) {
 	status = bc635_read (&rawt);
 	if (status != -1) {
-	    CARD_TIMESTAT = 0;
+	    CARD_TIMESTAT = 0;	/* time ok */
 	    CARD_REGS = (double) status;
-	    CARD_TIME = rawt;	/* time ok */
-	} else
+	    CARD_TIME = rawt;
+	    if (DEBUG_FLAG)
+		printf("getBancomTime, ok rawt=%f, regs=%d\n", rawt, status);
+	} else {
 	    CARD_TIMESTAT = 1;  /* cannot convert time */
-    } else if (DEBUG_MODE) {
-	    printf("getBancomTime, fail: found=%d\n", CARD_FOUND);
+	    if (DEBUG_FLAG)
+		printf("getBancomTime, failed to read time\n");
+	}
+    } else if (DEBUG_FLAG) {
+	printf("getBancomTime, card not present\n");
     }
 
     return 0;
