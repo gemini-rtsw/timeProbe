@@ -1,0 +1,8 @@
+19 December 2017  V1-1-3
+      Updated configure/RELEASE to modernize it, agreeing with our
+      EPICS 3.14.12.7 release, and the appropriate paths and versions
+      for the support modules.
+
+28 December 2017  V1-1-4
+      Updated configure/RELEASE to use the 1-6-7 version of the bancomm
+      driver, which includes the TZ bug fixes.
