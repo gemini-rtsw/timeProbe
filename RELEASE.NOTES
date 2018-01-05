@@ -6,3 +6,6 @@
 28 December 2017  V1-1-4
       Updated configure/RELEASE to use the 1-6-7 version of the bancomm
       driver, which includes the TZ bug fixes.
+
+04 January 2018 V1-1-5
+      Update to build against new Bancomm  1-6-8
