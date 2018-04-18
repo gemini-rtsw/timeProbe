@@ -25,7 +25,7 @@ PROD_SUPP=/gem_sw/prod/$(EPICS_RELEASE)/support
 WORK_SUPP=/gem_sw/work/$(EPICS_RELEASE)/support
 TEST_SUPP=/home/mrippa/work/$(EPICS_RELEASE)/support
 
-BANCOMM=$(PROD_SUPP)/bancomm/1-6-8
+BANCOMM=$(PROD_SUPP)/bancomm/1-6-9
 GEMREC=$(PROD_SUPP)/geminiRec/4-1-6
 
 # EPICS_BASE usually appears last so other apps can override stuff:
