@@ -19,17 +19,15 @@
 # Build settings that are NOT module paths should appear in a
 # CONFIG_SITE file.
 
-EPICS_RELEASE=R3.14.12.7
+EPICS_RELEASE=R3.14.12.8
 
-PROD_SUPP=/gem_sw/prod/$(EPICS_RELEASE)/support
-WORK_SUPP=/gem_sw/work/$(EPICS_RELEASE)/support
-TEST_SUPP=/home/mrippa/work/$(EPICS_RELEASE)/support
+WORK_SUPP=/gem_swdev1/work/$(EPICS_RELEASE)/support
 
-BANCOMM=$(PROD_SUPP)/bancomm/1-6-9
-GEMREC=$(PROD_SUPP)/geminiRec/4-1-6
+BANCOMM=$(WORK_SUPP)/bancomm
+GEMREC=$(WORK_SUPP)/geminiRec
 
 # EPICS_BASE usually appears last so other apps can override stuff:
-EPICS_BASE=/gem_sw/epics/$(EPICS_RELEASE)/base
+EPICS_BASE=/gem_swdev1/epics/$(EPICS_RELEASE)/base
 
 # Set RULES here if you want to take build rules from somewhere
 # other than EPICS_BASE:
