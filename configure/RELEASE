@@ -24,10 +24,8 @@ EPICS_RELEASE=R3.14.12.8
 PROD_SUPP=/gem_sw/prod/$(EPICS_RELEASE)/support
 WORK_SUPP=/gem_sw/work/$(EPICS_RELEASE)/support
 
-
-FAKETIMELIB=$(WORK_SUPP)/fakeTimelib
-GEMREC=$(WORK_SUPP)/geminiRec
-GEMREC=$(PROD_SUPP)/geminiRec/4-1-6
+GEMREC=$(PROD_SUPP)/geminiRec/4-1-7
+TIMELIB=$(PROD_SUPP)/timelib/2-0-2
 
 
 # EPICS_BASE usually appears last so other apps can override stuff:
