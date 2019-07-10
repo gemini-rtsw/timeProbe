@@ -2,7 +2,8 @@
 #include <epicsExport.h>
 #include <registryFunction.h>
 
-#include <bc635.h>
+//#include <bc635.h>
+#include "timeLib.h"
 #include <genSubRecord.h>
 
 /* Debug mode. Set this value to 1 to enable debug messages.
@@ -53,12 +54,12 @@
  */
 long initBancomTime (struct genSubRecord *pgsub)
 {
-    if (bcTestCard() == 0) { /* card found */
+    //if (bcTestCard() == 0) { /* card found */
 	/* printf ("initBancomTime: time card found\n"); */
 	CARD_FOUND = 1;
-    } else
+    /*} else
 	CARD_FOUND = 0;
-
+    */
     return 0;
 }
 
@@ -119,11 +120,11 @@ long getBancomTime (struct genSubRecord *pgsub)
      * if it succeeds in converting the time or -1 otherwise.
      */
     if (CARD_FOUND) {
-	status = bc635_read (&rawt);
+	status = timeNow (&rawt); //bc635_read (&rawt);
 	if (status != -1) {
 	    CARD_TIMESTAT = 0;	/* time ok */
 	    CARD_REGS = (double) status;
-	    CARD_TIME = rawt;
+	    CARD_TIME = rawt; //Leapseconds TODO:Review why it isn't accounted for yet, it is at cpotcsioc machine but not on sbfrtdev-lv2 
 	    if (DEBUG_FLAG)
 		printf("getBancomTime, ok rawt=%f, regs=%d\n", rawt, status);
 	} else {
