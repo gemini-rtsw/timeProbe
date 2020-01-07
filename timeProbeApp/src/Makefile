@@ -13,7 +13,6 @@ LIBRARY_IOC += timeProbe
 DBD += timeProbe.dbd
 
 # timeProbe.dbd will be made up from these files:
-timeProbe_DBD += base.dbd
 timeProbe_DBD += bancomm.dbd 
 timeProbe_DBD += geminiRecords.dbd
 timeProbe_DBD += timeProbeFuncs.dbd
