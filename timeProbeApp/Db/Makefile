@@ -25,6 +25,6 @@ include $(TOP)/configure/RULES
 $(COMMON_DIR)/%.db: %.db
 	cp $< $@
 
-clean: myclean
+clean:: myclean
 myclean:
 	$(RM) *.dat *.bak 
