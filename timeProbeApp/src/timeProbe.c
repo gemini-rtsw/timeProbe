@@ -2,19 +2,21 @@
 #include <epicsExport.h>
 #include <registryFunction.h>
 
-#include <bc635.h>
+//#include <bc635.h>
+#include "timeLib.h"
+#include "bc635Aliases.h"
 #include <genSubRecord.h>
 
 /* Debug mode. Set this value to 1 to enable debug messages.
  */
 #define DEBUG_FLAG	*((long *) (pgsub->a))
 
-/* Time card present. This value is set (once) in initBancomTime
+/* Bancom time card present. This value is set (once) in initTime
  * when the record is initialized.
  */
 #define CARD_FOUND	*((long *) (pgsub->valb))
 
-/* These values are set in the getBancomTime every time the record runs.
+/* These values are set in the getTime every time the record runs.
  * The output is an array of four bytes to allow the Linux timeProbe to
  * read these values in a single get operation.
  */
@@ -26,13 +28,14 @@
 /********************************************************************
  *+
  * FUNCTION NAME:
- * initBancomTime
+ * initTime
  *
  * INVOCATION:
- * status = initBancomTime();
+ * status = initTime();
  *
  * PURPOSE:
- * Checks whether the time card is present
+ * Checks whether the bancom time card is present if compiled with Bancomm 
+ * support if not it will always claim no card is found.
  *
  * DESCRIPTION:
  * Call bcTestCard() to determine whether the Bancom card is available.
@@ -51,10 +54,10 @@
  * None.
  *-
  */
-long initBancomTime (struct genSubRecord *pgsub)
+long initTime (struct genSubRecord *pgsub)
 {
     if (bcTestCard() == 0) { /* card found */
-	/* printf ("initBancomTime: time card found\n"); */
+	 printf ("initTime:Bancom time card found\n"); 
 	CARD_FOUND = 1;
     } else
 	CARD_FOUND = 0;
@@ -65,13 +68,13 @@ long initBancomTime (struct genSubRecord *pgsub)
 /********************************************************************
  *+
  * FUNCTION NAME:
- * getBancomTime
+ * getTime
  *
  * INVOCATION:
- * status = getBancomTime();
+ * status = getTime();
  *
  * PURPOSE:
- * Return the time from the Bancom card
+ * Return the time from the Bancom card if not available use other provider
  *
  * DESCRIPTION:
  * Call bc635_read() to get the time from the bancom card and the status bits.
@@ -102,7 +105,7 @@ long initBancomTime (struct genSubRecord *pgsub)
  * None.
  *-
  */
-long getBancomTime (struct genSubRecord *pgsub)
+long getTime (struct genSubRecord *pgsub)
 {
     double	rawt;
     int		status;
@@ -125,18 +128,23 @@ long getBancomTime (struct genSubRecord *pgsub)
 	    CARD_REGS = (double) status;
 	    CARD_TIME = rawt;
 	    if (DEBUG_FLAG)
-		printf("getBancomTime, ok rawt=%f, regs=%d\n", rawt, status);
+		printf("getTime, ok rawt=%f, regs=%d\n", rawt, status);
 	} else {
 	    CARD_TIMESTAT = 1;  /* cannot convert time */
 	    if (DEBUG_FLAG)
-		printf("getBancomTime, failed to read time\n");
+		printf("getTime, failed to read time\n");
 	}
-    } else if (DEBUG_FLAG) {
-	printf("getBancomTime, card not present\n");
+    } else {
+	if (DEBUG_FLAG)
+	    printf("getTime, Bancom card not present\n");
+	/* if there is no card we can still obtain the time from other providers */
+	timeNow(&rawt);  
+	CARD_TIMESTAT = 0;  /* time ok */
+	CARD_TIME = rawt;
     }
 
     return 0;
 }
 
-epicsRegisterFunction(initBancomTime);
-epicsRegisterFunction(getBancomTime);
+epicsRegisterFunction(initTime);
+epicsRegisterFunction(getTime);

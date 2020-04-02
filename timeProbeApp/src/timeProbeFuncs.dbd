@@ -1,2 +1,2 @@
-function(initBancomTime)
-function(getBancomTime)
+function(initTime)
+function(getTime)
