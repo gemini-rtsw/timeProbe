@@ -24,6 +24,7 @@ PROD_SUPP=/gem_base/epics/support
 
 BANCOMM=$(PROD_SUPP)/bancomm
 GEMREC=$(PROD_SUPP)/geminiRec
+TIMELIB=$(PROD_SUPP)/timelib
 
 # EPICS_BASE usually appears last so other apps can override stuff:
 EPICS_BASE=/gem_base/epics/epics-base
