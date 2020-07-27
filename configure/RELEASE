@@ -19,16 +19,14 @@
 # Build settings that are NOT module paths should appear in a
 # CONFIG_SITE file.
 
-EPICS_RELEASE=R3.14.12.8
 
-PROD_SUPP=/gem_sw/prod/$(EPICS_RELEASE)/support
-WORK_SUPP=/gem_sw/work/$(EPICS_RELEASE)/support
+PROD_SUPP=/gem_base/epics/support
 
-GEMREC=$(PROD_SUPP)/geminiRec/4-1-11
-TIMELIB=$(PROD_SUPP)/timelib/2-1-4
+BANCOMM=$(PROD_SUPP)/bancomm
+GEMREC=$(PROD_SUPP)/geminiRec
 
 # EPICS_BASE usually appears last so other apps can override stuff:
-EPICS_BASE=/gem_sw/epics/$(EPICS_RELEASE)/base
+EPICS_BASE=/gem_base/epics/epics-base
 
 # Set RULES here if you want to take build rules from somewhere
 # other than EPICS_BASE:
