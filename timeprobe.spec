@@ -28,8 +28,8 @@ Source0: %{name}-%{version}.tar.gz
 ExclusiveArch: %{arch}
 Prefix: %{_prefix}
 ## You may specify dependencies here
-BuildRequires: epics-base-devel re2c gemini-ade bancomm-devel geminiRec psmisc
-Requires: epics-base bancomm geminiRec
+BuildRequires: epics-base-devel re2c gemini-ade bancomm-devel geminiRec-devel timelib-devel psmisc
+Requires: epics-base bancomm geminiRec timelib
 ## Switch dependency checking off
 # AutoReqProv: no
 
