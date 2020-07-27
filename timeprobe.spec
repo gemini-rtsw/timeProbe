@@ -90,3 +90,6 @@ rm -rf $RPM_BUILD_ROOT
    /%{_prefix}/%{name}/configure
 
 %changelog
+* Mon Jul 27 2020 fkraemer <fkraemer@gemini.edu> 3.15.8-1.6.13.20200727aa1632f
+- new package built with tito
+
