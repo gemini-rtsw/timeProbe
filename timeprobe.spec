@@ -1,7 +1,7 @@
 %define _prefix /gem_base/epics/support
 %define name timeProbe
 %define version 3.15.8
-%define release 1.6.13
+%define release 1.1.15
 %define repository gemdev
 %define debug_package %{nil}
 %define arch %(uname -m)
@@ -90,6 +90,10 @@ rm -rf $RPM_BUILD_ROOT
    /%{_prefix}/%{name}/configure
 
 %changelog
+* Mon Jul 27 2020 fkraemer <fkraemer@gemini.edu> 3.15.8-1.1.15.20200727e5d4050
+- added timelib dependency to specfile (fkraemer@gemini.edu)
+- added timelib dep in configure/RELEASE (fkraemer@gemini.edu)
+
 * Mon Jul 27 2020 fkraemer <fkraemer@gemini.edu> 3.15.8-1.6.13.20200727aa1632f
 - new package built with tito
 
