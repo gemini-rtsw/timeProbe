@@ -93,6 +93,11 @@ rm -rf $RPM_BUILD_ROOT
    /%{_prefix}/%{name}/configure
 
 %changelog
+* Wed Aug 05 2020 fkraemer <fkraemer@gemini.edu> 3.15.8-1.1.15.202008050448b66b5a8
+- Release tag enriched with hour and minute (%%H%%M) to be able to build
+  several RPMs a day without messing up the repo (fkraemer@gemini.edu)
+- don't copy not existing include dir (fkraemer@gemini.edu)
+
 * Wed Jul 29 2020 fkraemer <fkraemer@gemini.edu> 3.15.8-1.1.15.2020072991538fe
 - adapted dependecies for BuildRequires and devel package (fkraemer@gemini.edu)
 
