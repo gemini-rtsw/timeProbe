@@ -11,13 +11,16 @@ LIBRARY_IOC += timeProbe
 
 # <APPNAME>.dbd will be created and installed
 DBD += timeProbe.dbd
-DBD += timeProbeSupport.dbd
+DBD += timeProbeSupp.dbd
+
+# timeProbe.dbd will be made up from these files:
+timeProbeSupp_DBD += timelib.dbd 
+timeProbeSupp_DBD += geminiRecords.dbd
+timeProbeSupp_DBD += timeProbeSupport.dbd
 
 # timeProbe.dbd will be made up from these files:
 timeProbe_DBD += base.dbd
-timeProbe_DBD += timelib.dbd 
-timeProbe_DBD += geminiRecords.dbd
-timeProbe_DBD += timeProbeSupport.dbd
+timeProbe_DBD += $(timeProbeSupp_DBD)
 
 # specify all source files to be compiled
 # including sequencer (.st) source files
