@@ -21,15 +21,15 @@
 
 
 PROD_SUPP=/gem_base/epics/support
-WORK_SUPP=/gem_base/epics/support
+WORK_SUPP=/home/iarriagada/work/R3.15/support
 
-BANCOMM=$(PROD_SUPP)/bancomm
-GEMREC=$(PROD_SUPP)/geminiRec
-TIMELIB=$(PROD_SUPP)/timelib
+#BANCOMM=$(PROD_SUPP)/bancomm
+#GEMREC=$(PROD_SUPP)/geminiRec
+#TIMELIB=$(PROD_SUPP)/timelib
 
-#GEMREC=$(WORK_SUPP)/geminiRec
-#TIMELIB=$(WORK_SUPP)/timelib
-#BANCOMM=$(WORK_SUPP)/bancomm
+GEMREC=$(WORK_SUPP)/geminiRec
+TIMELIB=$(WORK_SUPP)/timelib
+BANCOMM=$(WORK_SUPP)/bancomm
 
 # EPICS_BASE usually appears last so other apps can override stuff:
 EPICS_BASE=/gem_base/epics/epics-base

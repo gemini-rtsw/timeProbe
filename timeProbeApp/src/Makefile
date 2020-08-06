@@ -14,7 +14,7 @@ DBD += timeProbe.dbd
 DBD += timeProbeSupp.dbd
 
 # timeProbe.dbd will be made up from these files:
-timeProbeSupp_DBD += timelib.dbd 
+timeProbeSupp_DBD += timelibSupp.dbd 
 timeProbeSupp_DBD += geminiRecords.dbd
 timeProbeSupp_DBD += timeProbeSupport.dbd
 
