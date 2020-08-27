@@ -93,6 +93,10 @@ rm -rf $RPM_BUILD_ROOT
    /%{_prefix}/%{name}/configure
 
 %changelog
+* Thu Aug 27 2020 Felix Kraemer <fkraemer@gemini.edu> 3.15.8-1.1.15.2020082710217ad810f
+- Added support for configure/RELEASE.local file to overwrite default
+  definitions (fkraemer@gemini.edu)
+
 * Wed Aug 26 2020 Felix Kraemer <fkraemer@gemini.edu> 3.15.8-1.1.15.2020082611173882fe6
 - commented out WORK_SUPP as it conflicts with the one in timelib; replaced
   WORK_SUPP with PROD_SUPP in lines below (fkraemer@gemini.edu)
