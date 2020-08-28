@@ -21,11 +21,6 @@
 
 
 PROD_SUPP=/gem_base/epics/support
-#WORK_SUPP=/home/iarriagada/work/R3.15/support
-
-#BANCOMM=$(WORK_SUPP)/bancomm
-#GEMREC=$(WORK_SUPP)/geminiRec
-#TIMELIB=$(WORK_SUPP)/timelib
 
 GEMREC=$(PROD_SUPP)/geminiRec
 TIMELIB=$(PROD_SUPP)/timelib
@@ -33,6 +28,12 @@ BANCOMM=$(PROD_SUPP)/bancomm
 
 # EPICS_BASE usually appears last so other apps can override stuff:
 EPICS_BASE=/gem_base/epics/epics-base
+
+# include local RELEASE configuration file (this will be ignored by with
+# .gitignore to keep it local and prevent poisoning the default build 
+# scheme)
+# overwrite configuration from above with this file and do not edit
+# this one
 -include $(TOP)/configure/RELEASE.local
 
 
