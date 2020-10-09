@@ -1,7 +1,5 @@
 %define _prefix /gem_base/epics/support
 %define name timeProbe
-%define version 3.15.8
-%define release 1.1.15
 %define repository gemdev
 %define debug_package %{nil}
 %define arch %(uname -m)
@@ -20,8 +18,8 @@
 
 Summary: %{name} Package, a module for EPICS base
 Name: %{name}
-Version: %{version}
-Release: %release.%(date +"%Y%m%d%H%M")%{checkout}%{?dist}
+Version: 1.1.15
+Release: 2%{?dist}
 License: EPICS Open License
 Group: Applications/Engineering
 Source0: %{name}-%{version}.tar.gz
@@ -93,6 +91,10 @@ rm -rf $RPM_BUILD_ROOT
    /%{_prefix}/%{name}/configure
 
 %changelog
+* Fri Oct 09 2020 fkraemer <fkraemer@gemini.edu> 1.1.15-2
+- applied new version/release scheme and new yum repository structure
+- Deleted some unncessary comments in configure/RELEASE
+
 * Thu Aug 27 2020 Felix Kraemer <fkraemer@gemini.edu> 3.15.8-1.1.15.2020082710217ad810f
 - Added support for configure/RELEASE.local file to overwrite default
   definitions (fkraemer@gemini.edu)
@@ -103,6 +105,8 @@ rm -rf $RPM_BUILD_ROOT
 - Fixed timelibSupp.dbd reference (iarriagada@gemini.edu)
 - removed references to iarriagada on RELEASE (iarriagada@gemini.edu)
 - Added support .dbd to be used by IOCs (iarriagada@gemini.edu)
+
+* Wed Aug 05 2020 fkraemer <fkraemer@gemini.edu> 3.15.8-1.1.15.202008050448b66b5a8
 - Release tag enriched with hour and minute (%%H%%M) to be able to build
   several RPMs a day without messing up the repo (fkraemer@gemini.edu)
 - don't copy not existing include dir (fkraemer@gemini.edu)
