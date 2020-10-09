@@ -19,7 +19,7 @@
 Summary: %{name} Package, a module for EPICS base
 Name: %{name}
 Version: 1.1.15
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: EPICS Open License
 Group: Applications/Engineering
 Source0: %{name}-%{version}.tar.gz
@@ -91,6 +91,10 @@ rm -rf $RPM_BUILD_ROOT
    /%{_prefix}/%{name}/configure
 
 %changelog
+* Fri Oct 09 2020 fkraemer <fkraemer@gemini.edu> 1.1.15-2
+- applied new version/release scheme and new yum repository structure
+- Deleted some unncessary comments in configure/RELEASE
+
 * Thu Aug 27 2020 Felix Kraemer <fkraemer@gemini.edu> 3.15.8-1.1.15.2020082710217ad810f
 - Added support for configure/RELEASE.local file to overwrite default
   definitions (fkraemer@gemini.edu)
