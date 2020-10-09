@@ -1,7 +1,5 @@
 %define _prefix /gem_base/epics/support
 %define name timeProbe
-%define version 3.15.8
-%define release 1.1.15
 %define repository gemdev
 %define debug_package %{nil}
 %define arch %(uname -m)
@@ -20,8 +18,8 @@
 
 Summary: %{name} Package, a module for EPICS base
 Name: %{name}
-Version: %{version}
-Release: %release.%(date +"%Y%m%d%H%M")%{checkout}%{?dist}
+Version: 1.1.15
+Release: 1%{?dist}
 License: EPICS Open License
 Group: Applications/Engineering
 Source0: %{name}-%{version}.tar.gz
