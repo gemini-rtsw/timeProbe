@@ -19,7 +19,7 @@
 Summary: %{name} Package, a module for EPICS base
 Name: %{name}
 Version: 1.1.15
-Release: 2%{?dist}
+Release: 3%{?dist}
 License: EPICS Open License
 Group: Applications/Engineering
 Source0: %{name}-%{version}.tar.gz
@@ -91,6 +91,10 @@ rm -rf $RPM_BUILD_ROOT
    /%{_prefix}/%{name}/configure
 
 %changelog
+* Mon Jan 11 2021 Ignacio Arriagada <iarriagada@gemini.edu> 1.1.15-3
+- Added latest changes to accomodate ADE2 build and test setup
+- This build uses the fixed version of timelib, which corrects LST error
+
 * Fri Oct 09 2020 fkraemer <fkraemer@gemini.edu> 1.1.15-2
 - applied new version/release scheme and new yum repository structure
 - Deleted some unncessary comments in configure/RELEASE
