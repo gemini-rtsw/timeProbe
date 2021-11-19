@@ -1,0 +1,137 @@
+stages:
+    - prepare 
+    - configure
+    - build
+    - deploy
+
+variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+    CI_SOURCE_BRANCH: 'git for-each-ref | grep $CI_COMMIT_SHORT_SHA | grep origin | sed "s/.*\///"'
+    # stable, testing or unstable
+    MATURITY: "testing"
+    EPICS_MOCK_CONFIG: "/etc/mock/templates/gemini-rtsw-rtems5-epics7-testing.tpl"
+    BASE_CONTAINER: "registry.gitlab.com/nsf-noirlab/gemini/rtsw/epics-base/epics-base/testing/master:latest"
+
+create-rpm-env:
+    stage: prepare
+    variables:
+        RPM_REPO_UNSTABLE: "/var/www/html/repo/gem-rtsw-unstable/$CI_PROJECT_NAME/$CI_COMMIT_BRANCH/centos-8/x86_64"
+        RPM_REPO_TESTING: "/var/www/html/repo/gem-rtsw-testing/$CI_PROJECT_NAME/centos-8/x86_64"
+    script:
+        # create branch-specific RPM repo directory and initialize it from testing, if testing repo is existing and
+        # unstable repo is empty
+        - >-
+          ssh -o StrictHostKeyChecking=no koji@hbfswgrepo-lv1.hi.gemini.edu \
+            "[ ! -d $RPM_REPO_UNSTABLE ] && mkdir -p $RPM_REPO_UNSTABLE && cd $RPM_REPO_UNSTABLE && createrepo_c ." \
+            || echo RPM repository directory already existing, ommiting to initialize it
+        - >-
+          ssh -o StrictHostKeyChecking=no koji@hbfswgrepo-lv1.hi.gemini.edu \
+            "[ -d $RPM_REPO_TESTING ] && \
+            [ $(ssh -o StrictHostKeyChecking=no koji@hbfswgrepo-lv1.hi.gemini.edu ls $RPM_REPO_UNSTABLE | wc -w) -eq 1 ] && \
+            rm -rf $RPM_REPO_UNSTABLE/repodata && cp -rf $RPM_REPO_TESTING/* $RPM_REPO_UNSTABLE/" \
+            || echo  RPM testing repo not existing or unstable repo already filled, ommitting to copy over from testing
+        # make CI_COMMIT_BRANCH available for subsequent jobs
+        - echo "CI_COMMIT_BRANCH=$CI_COMMIT_BRANCH" > branches.env
+    allow_failure: false
+    #    artifacts:
+    #    reports:
+    #        dotenv: branches.env
+    tags:
+        - gem-rtsw
+    only:
+        - branches
+
+create-containerfile:
+    stage: configure
+    script:
+        # let the substitution in the the global variables section actually happen or let it be preceded by a variable set externally
+        # (e.g. as a project variable set via API)
+        - CI_SOURCE_BRANCH_LOCAL=$(eval $CI_SOURCE_BRANCH) || CI_SOURCE_BRANCH_LOCAL=$CI_SOURCE_BRANCH
+        - echo "CI_SOURCE_BRANCH_LOCAL is set to $CI_SOURCE_BRANCH_LOCAL"
+        # create mock configuration file from template
+        - >-
+          sed -e "s#<PROJECTNAME>#$CI_PROJECT_NAME#g" \
+            -e "s#<BRANCH>#$CI_SOURCE_BRANCH_LOCAL#g" \
+            -e "s#<EPICS_MOCK_CONFIG_FILE>#$EPICS_MOCK_CONFIG#g" \
+            gem-ci/templates/mock/app/gem-rtsw-app-$MATURITY.cfg > gem-rtsw-app-$MATURITY.cfg
+        # create RPM repo configuration file from template 
+        - >-
+          sed -e "s#<PROJECTNAME>#$CI_PROJECT_NAME#g" \
+            -e "s#<BRANCH>#$CI_SOURCE_BRANCH_LOCAL#g" \
+            gem-ci/templates/rpm/app/gem-rtsw-app-$MATURITY.repo > gem-rtsw-app-$MATURITY.repo
+        # tweak Containerfile to COPY these repo configuration file instead of default testing ones
+        - >-
+          sed -e "s#<EPICS_BASE_CONTAINER>#$EPICS_BASE_CONTAINER#g" \
+            -e "s#<PROJECTNAME>#$CI_PROJECT_NAME#g" \
+            -e "s#<MATURITY>#$MATURITY#g" \
+            gem-ci/templates/docker/app/Containerfile > Containerfile
+    artifacts:
+        paths:
+        # make the following files available for the next job
+        - gem-rtsw-app-$MATURITY.cfg
+        - gem-rtsw-app-$MATURITY.repo
+        - Containerfile
+    tags:
+        - gem-rtsw
+    only:
+        - tags
+
+deploy-to-rpm-repo:
+    stage: build
+    script:
+        # let the substitution in the the global variables section actually happen or let it be preceded by a variable set externally
+        # (e.g. as a project variable set via API)
+        - CI_SOURCE_BRANCH_LOCAL=$(eval $CI_SOURCE_BRANCH) || CI_SOURCE_BRANCH_LOCAL=$CI_SOURCE_BRANCH
+        - echo "CI_SOURCE_BRANCH_LOCAL is set to $CI_SOURCE_BRANCH_LOCAL"
+        # make sure the ssh key of hbfswgrepo-lv1 is in .ssh/known_hosts
+        - ssh -o StrictHostKeyChecking=no koji@hbfswgrepo-lv1.hi.gemini.edu "echo importing public key of hbfswgrepo-lv1"
+        # create releasers.conf from template
+        # and replace /etc/mock with . for using the gemini-app-$MATURITY.cfg artifact from above
+        - >- 
+          sed -e "s#<PROJECTNAME>#$CI_PROJECT_NAME#g" \
+            -e "s#<BRANCH>#$CI_SOURCE_BRANCH_LOCAL#g" \
+            gem-ci/templates/tito/app/releasers.conf > .tito/releasers.conf
+        # create temporary backup of patched releasers conf which is the
+        # one that we need lateron to create the correct one for the container 
+        - cp .tito/releasers.conf .tito/releasers.bak
+        # patch again for the deployment to RPM repo
+        - sed -i -e "s#/etc/mock#\.#g" .tito/releasers.conf
+        - cp .tito/releasers.conf .tito/releasers.patched
+        # deploy the RPM to it
+        - RSYNC_USERNAME=koji tito release gem-rtsw-app-$MATURITY -o tmp || echo "Build failed, probably because of missing deps"
+        # rewind changes for tito release command above
+        - mv .tito/releasers.bak .tito/releasers.conf
+        - rm -rf tmp
+    artifacts:
+        paths:
+        # make the following files available for debugging
+        - .tito/releasers.patched
+        # .. and for container deployment, where the file is
+        # referenced in the Containerfile
+        - .tito/releasers.conf
+    # allow failure if RPM cannot be build, e.g. because parts of the
+    # support modules have not yet been ported
+    allow_failure: 
+        exit_codes:
+            - 123
+    tags:
+        - gem-rtsw
+    only:
+        - tags
+
+deploy-container:
+    stage: deploy
+    script:
+        # let the substitution in the the global variables section actually happen or let it be preceded by a variable set externally
+        # (e.g. as a project variable set via API)
+        - CI_SOURCE_BRANCH_LOCAL=$(eval $CI_SOURCE_BRANCH) || CI_SOURCE_BRANCH_LOCAL=$CI_SOURCE_BRANCH
+        - CI_PROJECT_NAME_BRANCH=$(echo $CI_PROJECT_NAME:$CI_SOURCE_BRANCH_LOCAL | tr '[:upper:]' '[:lower:]')
+        - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+        - docker build -t $CI_REGISTRY_IMAGE/$CI_PROJECT_NAME_BRANCH --no-cache -f Containerfile .
+        - docker push $CI_REGISTRY_IMAGE/$CI_PROJECT_NAME_BRANCH
+    tags:
+        - gem-rtsw
+    only:
+        - tags
+
+

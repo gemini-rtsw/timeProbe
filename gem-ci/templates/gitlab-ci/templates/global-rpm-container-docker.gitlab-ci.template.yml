@@ -1,0 +1,355 @@
+stages:
+    - prepare 
+    - configure
+    - build
+    - deploy
+
+variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+    # stable, testing or unstable
+    MATURITY: unstable
+    # app, common or epics-base
+    TYPE: app
+    # mock templates files location, should not change
+    MOCK_TEMPLATE_COMMON: "/etc/mock/templates/gem-rtsw-common.tpl"
+    MOCK_TEMPLATE_EPICS: "/etc/mock/templates/gem-rtsw-epics-base.tpl"
+    ## The following variables are meant to be preceded by trigger variables
+    BASE_CONTAINER: "registry.gitlab.com/nsf-noirlab/gemini/rtsw/epics-base/epics-base/testing/master:latest"
+
+default:
+    image: $BASE_CONTAINER
+
+# rules used to create containers and associated RPM repositories 
+# and to release rpms of the determinators to those
+.rpmrepo-container-rules:
+    rules:
+        # Type app, creates ioc-specific container with RPM repo
+        - &rpmrepo-container-app-stable
+          if: '$CI_PROJECT_NAMESPACE =~ /.*\/iocs$/ && $CI_COMMIT_BRANCH =~ /^release\/.*$/ && $CI_PIPELINE_SOURCE != "pipeline" && $CI_PIPELINE_SOURCE != "trigger"' 
+          variables: 
+            TYPE: app
+            MATURITY: stable
+        - &rpmrepo-container-app-testing
+          if: '$CI_PROJECT_NAMESPACE =~ /.*\/iocs$/ && $CI_COMMIT_BRANCH =~ /^testing\/.*$/ && $CI_PIPELINE_SOURCE != "pipeline" && $CI_PIPELINE_SOURCE != "trigger"' 
+          variables: 
+            TYPE: app
+            MATURITY: testing
+        - &rpmrepo-container-app-unstable
+          if: '$CI_PROJECT_NAMESPACE =~ /.*\/iocs$/ && $CI_COMMIT_BRANCH =~ /^unstable\/.*$/ && $CI_PIPELINE_SOURCE != "pipeline" && $CI_PIPELINE_SOURCE != "trigger"' 
+          variables: 
+            TYPE: app
+            MATURITY: unstable
+        # Type epics-base, creates container with RPM repo for type 'epics-base'
+        - &rpmrepo-container-epics-base-stable
+          if: '$CI_PROJECT_NAME == "epics-base" && $CI_COMMIT_BRANCH =~ /^release\/.*$/ && $CI_PIPELINE_SOURCE != "pipeline" && $CI_PIPELINE_SOURCE != "trigger"'
+          variables: 
+            TYPE: epics-base
+            MATURITY: stable
+        - &rpmrepo-container-epics-base-testing
+          if: '$CI_PROJECT_NAME == "epics-base" && $CI_COMMIT_BRANCH =~ /^testing\/.*$/ && $CI_PIPELINE_SOURCE != "pipeline" && $CI_PIPELINE_SOURCE != "trigger"'
+          variables: 
+            TYPE: epics-base
+            MATURITY: testing
+        - &rpmrepo-container-epics-base-unstable
+          if: '$CI_PROJECT_NAME == "epics-base" && $CI_COMMIT_BRANCH =~ /^unstable\/.*$/ && $CI_PIPELINE_SOURCE != "pipeline" && $CI_PIPELINE_SOURCE != "trigger"'
+          variables: 
+            TYPE: epics-base
+            MATURITY: unstable
+        # Type common, creates container with RPM repo for type 'common'
+        - &rpmrepo-container-common-stable
+          if: '$CI_PROJECT_NAME == "gemini-ade" && $CI_COMMIT_BRANCH =~ /^release\/.*$/ && $CI_PIPELINE_SOURCE != "pipeline" && $CI_PIPELINE_SOURCE != "trigger"'
+          variables: 
+            TYPE: common
+            MATURITY: stable
+        - &rpmrepo-container-common-testing
+          if: '$CI_PROJECT_NAME == "gemini-ade" && $CI_COMMIT_BRANCH =~ /^testing\/.*$/ && $CI_PIPELINE_SOURCE != "pipeline" && $CI_PIPELINE_SOURCE != "trigger"'
+          variables: 
+            TYPE: common
+            MATURITY: testing
+        - &rpmrepo-container-common-unstable
+          if: '$CI_PROJECT_NAME == "gemini-ade" && $CI_COMMIT_BRANCH =~ /^unstable\/.*$/ && $CI_PIPELINE_SOURCE != "pipeline" && $CI_PIPELINE_SOURCE != "trigger"'
+          variables: 
+            TYPE: common
+            MATURITY: unstable
+
+# rules used to build rpms only and deploy it to already existing repo.
+# This is for all projects that do not create a container and associated repo, 
+# i.e. all support modules, all but gemini-ade in 'common' and all but
+# epics-base in 'epics-base' type
+.buildrpm-rules:
+    rules:
+        ## support modules can be released to either epics-base rpm repos (default) or 
+        ## IOC specific rpm repos 
+        ## (branch name then needs to be sth like testing/special/myIOC/myBranch)
+        # don't execute if target project rpm repo is type common (which is wrong)
+        - if: '$CI_PROJECT_NAMESPACE =~ /.*\/support$/ && $CI_COMMIT_BRANCH =~ /^.*\/special\/common\/.*$/'
+          when: never
+        # don't execute if target project rpm repo is type epics-base (which is default)
+        - if: '$CI_PROJECT_NAMESPACE =~ /.*\/support$/ && $CI_COMMIT_BRANCH =~ /^.*\/special\/epics-base\/.*$/'
+          when: never
+        # Type app for support modules, released to the IOC-specific RPM repo
+        - if: '$CI_PROJECT_NAMESPACE =~ /.*\/support$/ && $CI_COMMIT_BRANCH =~ /^.*\/special\/.*$/'
+          variables: 
+            TYPE: app
+        # Type epics-base, released to the epics-base RPM repo (default)
+        - if: '$CI_PROJECT_NAMESPACE =~ /.*\/support$/ && $CI_COMMIT_BRANCH'
+          variables: 
+            TYPE: epics-base
+        ## epics-base modules can be released to either epics-base rpm repos (default) or 
+        ## IOC specific rpm repos 
+        ## (branch name then needs to be sth like testing/special/myIOC/myBranch)
+        # don't execute if target project rpm repo is type common (which is wrong)
+        - if: '$CI_PROJECT_NAMESPACE =~ /.*\/epics-base$/ && $CI_COMMIT_BRANCH =~ /^.*\/special\/common\/.*$/'
+          when: never
+        # don't execute if target project rpm repo is type epics-base (which is default)
+        - if: '$CI_PROJECT_NAMESPACE =~ /.*\/epics-base$/ && $CI_COMMIT_BRANCH =~ /^.*\/special\/epics-base\/.*$/'
+          when: never
+        # Type app, released to the IOC-specific RPM repo
+        - if: '$CI_PROJECT_NAMESPACE =~ /.*\/epics-base$/ && $CI_PROJECT_NAME != "epics-base" &&  $CI_COMMIT_BRANCH =~ /^.*\/special\/.*$/'
+          variables: 
+            TYPE: app
+        # Type epics-base, released to the epics-base-specific RPM repo
+        - if: '$CI_PROJECT_NAMESPACE =~ /.*\/epics-base$/ && $CI_PROJECT_NAME != "epics-base" &&  $CI_COMMIT_BRANCH'
+          variables: 
+            TYPE: epics-base
+        ## common modules can be released to either common rpm repos (default) or 
+        ## epics-base or IOC specific rpm repos 
+        ## (branch name then needs to be sth like testing/special/epics-base/myBranch
+        ## or testing/special/myIOC/myBranch, respectively)
+        # don't execute if target project rpm repo is type common (which is default)
+        - if: '$CI_PROJECT_NAMESPACE =~ /.*\/common$/ && $CI_COMMIT_BRANCH =~ /^.*\/special\/common\/.*$/'
+          when: never
+        # Type epics-base, released to the epics-base-specific RPM repo
+        - if: '$CI_PROJECT_NAMESPACE =~ /.*\/common$/ && $CI_PROJECT_NAME != "gemini-ade" && $CI_COMMIT_BRANCH =~ /^.*\/special\/epics-base\/.*$/'
+          variables: 
+            TYPE: epics-base
+        # Type app, released to the IOC-specific RPM repo
+        - if: '$CI_PROJECT_NAMESPACE =~ /.*\/common$/ && $CI_PROJECT_NAME != "gemini-ade" && $CI_COMMIT_BRANCH =~ /^.*\/special\/.*$/'
+          variables: 
+            TYPE: app
+        # Type common, released to the common-specific RPM repo
+        - if: '$CI_PROJECT_NAMESPACE =~ /.*\/common$/ && $CI_PROJECT_NAME != "gemini-ade" && $CI_COMMIT_BRANCH'
+          variables: 
+            TYPE: common
+
+.add-ssh-key:
+    before_script:
+        - dnf install openssh-clients -y
+        - mkdir -p ~/.ssh/
+        - echo -e "$SSH_PRIVATE" > ~/.ssh/id_rsa
+        - chmod 600 ~/.ssh/id_rsa
+        - eval `ssh-agent -s`
+        - ssh-add ~/.ssh/id_rsa
+        - ssh-keyscan hbfswgrepo-lv1.hi.gemini.edu >> ~/.ssh/known_hosts
+
+.add-ssh-key-tito:
+    before_script:
+        - dnf install openssh-clients epel-release rsync -y
+        - dnf install 'dnf-command(config-manager)' -y
+        - dnf config-manager --set-enabled powertools 
+        - dnf install tito -y
+        - mkdir -p ~/.ssh/
+        - echo -e "$SSH_PRIVATE" > ~/.ssh/id_rsa
+        - chmod 600 ~/.ssh/id_rsa
+        - eval `ssh-agent -s`
+        - ssh-add ~/.ssh/id_rsa
+        - ssh-keyscan hbfswgrepo-lv1.hi.gemini.edu >> ~/.ssh/known_hosts
+#cache: 
+#    key: $CI_COMMIT_SHORT_SHA
+#    paths:
+#        - branch.env
+
+
+.create-rpm-env:
+    extends:
+        - .rpmrepo-container-rules
+        - .add-ssh-key
+    stage: prepare
+#    variables:
+#        RPM_REPO: "/var/www/html/repo/gem-rtsw-$MATURITY/$CI_PROJECT_NAME/$CI_COMMIT_BRANCH/centos-8/x86_64"
+#        RPM_REPO_SOURCE: "/var/www/html/repo/gem-rtsw-testing/$CI_PROJECT_NAME/centos-8/x86_64"
+    script:
+        - gem-ci/scripts/create-rpm-env.sh
+    allow_failure: false
+    tags:
+        - gem-rtsw-docker
+
+.create-config:
+#    extends:
+#        .rpmrepo-container-rules
+    rules:
+        - if: '$CI_PIPELINE_SOURCE == "pipeline"'
+        - if: '$CI_PIPELINE_SOURCE == "trigger"'
+        - *rpmrepo-container-app-stable
+        - *rpmrepo-container-app-testing
+        - *rpmrepo-container-app-unstable
+        - *rpmrepo-container-epics-base-stable
+        - *rpmrepo-container-epics-base-testing
+        - *rpmrepo-container-epics-base-unstable
+        - *rpmrepo-container-common-stable
+        - *rpmrepo-container-common-testing
+        - *rpmrepo-container-common-unstable
+    stage: configure
+    script:
+        - gem-ci/scripts/create-config.sh
+    artifacts:
+        paths:
+        # make the following files available for the next job
+        - gem-rtsw-$TYPE.tpl
+        - gem-rtsw-$TYPE.cfg
+        - gem-rtsw-$TYPE.repo
+        - releasers.conf
+        - Containerfile
+    tags:
+        - gem-rtsw-docker
+
+.deploy-to-rpm-repo:
+    stage: build
+    extends:
+        - .rpmrepo-container-rules
+        - .add-ssh-key-tito
+    # not the global one, because it needs to install tito here
+    script:
+        - gem-ci/scripts/deploy-to-rpm-repo.sh
+    after_script:
+        # create artifacts
+        - cp -r /var/lib/mock/gem-rtsw-$TYPE-$MATURITY/result mock-results
+    artifacts:
+        when: always
+        paths:
+        # make the following files available for debugging
+        - releasers.conf
+        - mock-results/build.log
+        - mock-results/hw_info.log
+        - mock-results/installed_pkgs.log
+        - mock-results/root.log
+        - mock-results/state.log
+        # .. and for container deployment, where the file is
+        # referenced in the Containerfile
+        - .tito/releasers.conf
+    # allow failure if RPM cannot be build, e.g. because parts of the
+    # support modules have not yet been ported
+    allow_failure: 
+        exit_codes:
+            - 123
+    tags:
+        - gem-rtsw-docker
+    environment:
+        name: ${MATURITY}/rpm
+        deployment_tier: development
+
+.deploy-container:
+#    extends:
+#        .rpmrepo-container-rules
+    rules:
+        - if: '$CI_PIPELINE_SOURCE == "pipeline"'
+        - if: '$CI_PIPELINE_SOURCE == "trigger"'
+        - *rpmrepo-container-app-stable
+        - *rpmrepo-container-app-testing
+        - *rpmrepo-container-app-unstable
+        - *rpmrepo-container-epics-base-stable
+        - *rpmrepo-container-epics-base-testing
+        - *rpmrepo-container-epics-base-unstable
+        - *rpmrepo-container-common-stable
+        - *rpmrepo-container-common-testing
+        - *rpmrepo-container-common-unstable
+    stage: deploy
+    image: docker:19.03.12
+    services:
+        - docker:19.03.12-dind
+    before_script:
+        - docker info
+    script:
+        - echo "CI_PROJECT_NAME is set to $CI_PROJECT_NAME"
+        - echo "TYPE is set to $TYPE"
+        - >-
+          if [[ "$TYPE" == "common" && "$CI_PROJECT_NAME" == "gemini-ade" \
+            || "$TYPE" == "epics-base" && "$CI_PROJECT_NAME" == "epics-base" \
+            || "$TYPE" == "app" ]]; then
+              # login
+              docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+              # build container image with tag $CI_COMMIT_SHORT_SHA
+              docker build -t $(echo $CI_REGISTRY_IMAGE/$CI_COMMIT_BRANCH:$CI_COMMIT_SHORT_SHA | tr '[:upper:]' '[:lower:]') --no-cache -f Containerfile .
+              docker push $(echo $CI_REGISTRY_IMAGE/$CI_COMMIT_BRANCH:$CI_COMMIT_SHORT_SHA | tr '[:upper:]' '[:lower:]')
+              # and for the tag 'latest'
+              docker build -t $(echo $CI_REGISTRY_IMAGE/$CI_COMMIT_BRANCH:latest | tr '[:upper:]' '[:lower:]') -f Containerfile .
+              docker push $(echo $CI_REGISTRY_IMAGE/$CI_COMMIT_BRANCH:latest | tr '[:upper:]' '[:lower:]') 
+              # and also for the tag 'latest' without branch specification (which is convenient for stable)
+              docker build -t $(echo $CI_REGISTRY_IMAGE/$MATURITY:latest | tr '[:upper:]' '[:lower:]') -f Containerfile .
+              docker push $(echo $CI_REGISTRY_IMAGE/$MATURITY:latest | tr '[:upper:]' '[:lower:]') 
+          fi
+    allow_failure: 
+        exit_codes:
+            - 123
+    tags:
+        - gem-rtsw-docker
+    environment:
+        name: ${MATURITY}/container
+        deployment_tier: development
+
+###
+# for building and releasing rpms for projects located in the 'support' subgroup
+.set-base-container:
+    image: centos:8
+    stage: prepare
+    extends:
+        - .buildrpm-rules
+    script:
+        - source gem-ci/scripts/set-base-container.sh
+    tags:
+        - gem-rtsw-docker
+    artifacts:
+        reports:
+            dotenv: prepare.env
+
+.deploy-other-rpm:
+    image: $NEW_BASE_CONTAINER
+    stage: build
+    extends:
+        - .buildrpm-rules
+        - .add-ssh-key-tito
+    #rules:
+    #    # only run triggered by pipeline
+    #    - if: '$CI_PIPELINE_SOURCE == "pipeline"'
+    script:
+        - gem-ci/scripts/deploy-other-rpm.sh
+    after_script:
+        # create artifacts
+        - cp -r /var/lib/mock/gem-rtsw-$TYPE-$MATURITY/result mock-results
+    artifacts:
+        when: always
+        paths:
+        # make the following files available for debugging
+        - .tito/releasers.conf
+        - mock-results/build.log
+        - mock-results/hw_info.log
+        - mock-results/installed_pkgs.log
+        - mock-results/root.log
+        - mock-results/state.log
+    tags:
+        - gem-rtsw-docker
+    environment:
+        name: ${MATURITY}/rpm
+        deployment_tier: development
+
+# This job triggers a multi-project pipeline to rebuild the 
+# container of the target project (i.e. either gemini-ade,
+# epics-base or one of the IOCs)
+.trigger-container-rebuild:
+    image: $NEW_BASE_CONTAINER
+    stage: deploy
+    extends:
+        - .buildrpm-rules
+    variables:
+        MATURITY: $MATURITY
+        CI_COMMIT_BRANCH: $CONTAINER_PROJECT_BRANCH
+    script:
+        - 'curl --request POST --form token=$CI_JOB_TOKEN 
+            --form ref=$CONTAINER_PROJECT_BRANCH 
+            --form "variables[TYPE]=$TYPE" 
+            --form "variables[MATURITY]=$MATURITY" 
+            "https://gitlab.com/api/v4/projects/$CONTAINER_PROJECT_HTML/trigger/pipeline"'
+#        - python gem-ci/python/trigger-container-rebuild.py
+    tags:
+        - gem-rtsw-docker
+

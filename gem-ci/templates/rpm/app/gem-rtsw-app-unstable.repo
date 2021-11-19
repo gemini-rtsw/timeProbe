@@ -1,0 +1,6 @@
+[gem-rtsw-app-unstable]
+name=Gemini RTSW group <PROJECTNAME> software packages unstable repository for branch '<BRANCH>'
+baseurl=http://hbfswgrepo-lv1.hi.gemini.edu/repo/gem-rtsw-unstable/<PROJECTNAME>/<BRANCH>/centos-8/x86_64/
+gpgcheck=0
+timeout=600
+enabled=0

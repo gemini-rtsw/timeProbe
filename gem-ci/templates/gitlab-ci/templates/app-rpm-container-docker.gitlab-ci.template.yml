@@ -1,0 +1,28 @@
+
+app_create-rpm-env:
+    extends:
+        .create-rpm-env
+
+app_create-config:
+    extends:
+        .create-config
+
+app_deploy-to-rpm-repo:
+    extends:
+        .deploy-to-rpm-repo
+
+app_deploy-container:
+    extends:
+        .deploy-container
+
+app_set-base-container:
+    extends:
+        .set-base-container
+
+app_deploy-other-rpm:
+    extends:
+        .deploy-other-rpm
+
+app_trigger-container-rebuild:
+    extends:
+        .trigger-container-rebuild

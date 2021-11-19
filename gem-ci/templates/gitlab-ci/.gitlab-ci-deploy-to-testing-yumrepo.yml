@@ -1,0 +1,11 @@
+deploy-to-testing:
+  stage: deploy
+  tags: 
+        - gem-rtsw
+  script:
+    # make sure the ssh key of hbfswgrepo-lv1 is in .ssh/known_hosts
+    - ssh -o StrictHostKeyChecking=no koji@hbfswgrepo-lv1.hi.gemini.edu ls
+    # deploy the RPM to it
+    - RSYNC_USERNAME=koji tito release gemrtsw-el8-epics315-testing-x86_64
+  only:
+    - tags

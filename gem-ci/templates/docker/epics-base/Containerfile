@@ -1,0 +1,31 @@
+FROM <BASE_CONTAINER>
+
+RUN dnf -y update
+
+# copy repo information which is created
+# by gitlab-ci in an earlier stage
+COPY gem-rtsw-epics-base.repo /etc/yum.repos.d/
+
+# copy mock configuration which is created
+# by gitlab-ci in an earlier stage
+COPY gem-rtsw-epics-base.cfg /etc/mock/
+COPY gem-rtsw-epics-base.tpl /etc/mock/templates/
+
+# copy tito releaser.conf to global directory
+# to be used with appropriate gemini-ade scripts
+# for 'tito release' command
+COPY releasers.conf /gem_base/usr/share/tito/epics-base/
+
+RUN dnf config-manager --enable gem-rtsw-epics-base-<MATURITY>
+RUN dnf makecache || echo "!! failed to make cache, is the repository initialized already? !!"
+
+# install all available packages from epics-base repo
+RUN repoquery --disablerepo="*" --enablerepo="gem-rtsw-epics-base*" --queryformat "%{NAME}\n" --available > packagelist.txt
+RUN xargs dnf -y install < packagelist.txt || printf '!! failed to install package !! \n\
+Is it deployed to the RPM repository already?'
+
+RUN dnf clean all
+
+CMD ["/sbin/init"]
+
+

@@ -1,0 +1,28 @@
+
+epics-base_create-rpm-env:
+    extends:
+        .create-rpm-env
+
+epics-base_create-config:
+    extends:
+        .create-config
+
+epics-base_deploy-to-rpm-repo:
+    extends:
+        .deploy-to-rpm-repo
+
+epics-base_deploy-container:
+    extends:
+        .deploy-container
+
+epics-base_set-base-container:
+    extends:
+        .set-base-container
+
+epics-base_deploy-other-rpm:
+    extends:
+        .deploy-other-rpm
+
+epics-base_trigger-container-rebuild:
+    extends:
+        .trigger-container-rebuild
