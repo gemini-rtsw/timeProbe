@@ -1,7 +1,0 @@
-[gem-rtsw-common]
-releaser = tito.release.YumRepoReleaser
-srpm_disttag = .el8
-builder = tito.builder.MockBuilder
-builder.mock = /etc/mock/gem-rtsw-common.cfg
-builder.test = 1
-rsync = hbfswgrepo-lv1.hi.gemini.edu:/rtsw/packages/gem-rtsw-testing/common/<BRANCH>/centos-8/x86_64/

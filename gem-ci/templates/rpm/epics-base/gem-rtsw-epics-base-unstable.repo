@@ -1,6 +1,0 @@
-[gem-rtsw-epics-base-unstable]
-name=Gemini RTSW group epics-base software packages unstable repository for branch '<BRANCH>'
-baseurl=http://hbfswgrepo-lv1.hi.gemini.edu/repo/gem-rtsw-unstable/epics-base/<BRANCH>/centos-8/x86_64/
-gpgcheck=0
-timeout=600
-enabled=0
