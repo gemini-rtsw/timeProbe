@@ -5,7 +5,7 @@
 //#include <bc635.h>
 #include "timeLib.h"
 #include "bc635Aliases.h"
-#include <genSubRecord.h>
+#include <aSubRecord.h>
 
 /* Debug mode. Set this value to 1 to enable debug messages.
  */
@@ -42,7 +42,7 @@
  * Use VALB to save this status for future invocations of the record.
  *
  * PARAMETERS: (">" input, "!" modified, "<" output)  
- * (>) pgsub  (struct genSubRecord *)    Pointer to gensub record structure
+ * (>) pgsub  (struct aSubRecord *)    Pointer to gensub record structure
  *
  * EPICS OUTPUT FIELDS:
  * (int) VALB	bancom card present (1=present, 0=not present).
@@ -54,7 +54,7 @@
  * None.
  *-
  */
-long initTime (struct genSubRecord *pgsub)
+long initTime (struct aSubRecord *pgsub)
 {
     if (bcTestCard() == 0) { /* card found */
 	 printf ("initTime:Bancom time card found\n"); 
@@ -89,7 +89,7 @@ long initTime (struct genSubRecord *pgsub)
  * 3: CARD_REGS     : time card registers (three bits).
  *
  * PARAMETERS: (">" input, "!" modified, "<" output)  
- * (>) pgsub  (struct genSubRecord *)    Pointer to gensub record structure
+ * (>) pgsub  (struct aSubRecord *)    Pointer to gensub record structure
  *
  * EPICS INPUT FIELDS:
  * (int) A	debug mode (0=no debug, 1=debug)
@@ -105,7 +105,7 @@ long initTime (struct genSubRecord *pgsub)
  * None.
  *-
  */
-long getTime (struct genSubRecord *pgsub)
+long getTime (struct aSubRecord *pgsub)
 {
     double	rawt;
     int		status;
