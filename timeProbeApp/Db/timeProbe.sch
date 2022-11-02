@@ -8,7 +8,7 @@ s 48 384 100 0 Debug mode/flag
 [cell use]
 use bb200tr -544 -888 -100 0 frame
 xform 0 736 -64
-use eaSub 320 -409 100 0 egenSub#1
+use egenSub 320 -409 100 0 egenSub#1
 xform 0 464 16
 p 400 352 100 0 1 FTA:LONG
 p 400 288 100 0 1 FTVA:DOUBLE
