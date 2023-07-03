@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <epicsExport.h>
 #include <registryFunction.h>
+#include <time.h>
 
 //#include <bc635.h>
 #include "timeLib.h"
@@ -24,6 +25,7 @@
 #define CARD_TIMESTAT	*((double *) (pgsub->vala) + 1)
 #define CARD_TIME	*((double *) (pgsub->vala) + 2)
 #define CARD_REGS	*((double *) (pgsub->vala) + 3)
+#define CARD_RT_CLOCK	*((double *) (pgsub->vala) + 4)
 
 /********************************************************************
  *+
@@ -116,6 +118,7 @@ long getTime (struct genSubRecord *pgsub)
     CARD_TIMESTAT = (double) 1;			/* failed; no time yet */
     CARD_TIME = (double) 0;			/* no time yet */
     CARD_REGS = (double) 0;			/* no register info yet */
+    CARD_RT_CLOCK = (double) 0;			/* no register info yet */
 
     /* Read the time from the card if the hardware was found.
      * bc635_read will return return the Bancom card status bits
@@ -142,6 +145,17 @@ long getTime (struct genSubRecord *pgsub)
 	CARD_TIMESTAT = 0;  /* time ok */
 	CARD_TIME = rawt;
     }
+
+    struct timespec clockNow;
+
+    /* If a Hi-Res clock is available and works, use it */
+    #ifdef CLOCK_REALTIME_HR
+        clock_gettime(CLOCK_REALTIME_HR, &clockNow) &&
+        /* Note: Uses the lo-res clock below if the above call fails */
+    #endif
+    clock_gettime(CLOCK_REALTIME, &clockNow);
+
+    CARD_RT_CLOCK = ((double)clockNow.tv_sec) + ((double)clockNow.tv_nsec)/1e9;
 
     return 0;
 }
