@@ -25,7 +25,9 @@
 #define CARD_TIMESTAT	*((double *) (pgsub->vala) + 1)
 #define CARD_TIME	*((double *) (pgsub->vala) + 2)
 #define CARD_REGS	*((double *) (pgsub->vala) + 3)
-#define CARD_RT_CLOCK	*((double *) (pgsub->vala) + 4)
+#define RT_CLOCK	*((double *) (pgsub->vala) + 4)
+#define MONO_CLOCK	*((double *) (pgsub->vala) + 5)
+#define MONO_DIFF	*((double *) (pgsub->vala) + 6)
 
 /********************************************************************
  *+
@@ -67,6 +69,12 @@ long initTime (struct genSubRecord *pgsub)
     return 0;
 }
 
+/* helper function to not repeat that big operation everywhere */
+double getDoubleTime(struct timespec *ts)
+{
+  return(((double)ts->tv_sec) + ((double)ts->tv_nsec)/1e9);
+}
+
 /********************************************************************
  *+
  * FUNCTION NAME:
@@ -87,8 +95,12 @@ long initTime (struct genSubRecord *pgsub)
  * The output array follow the same conventions of the RPC routines.
  * 0: CARD_STAT     : 0 if card was found; 1 otherwise
  * 1: CARD_TIMESTAT : 0 if time read successfuly; 1 otherwise.
- * 2: CARD_TIME     : time value
+ * 2: CARD_TIME     : time value, this is the EPICS time
  * 3: CARD_REGS     : time card registers (three bits).
+ * 4: RT_CLOCK      : real time clock value
+ * 5: MONO_CLOCK    : monotonic clock value
+ * 6: MONO_DIFF     : difference between 2 reads to check if there has been context
+ *                    switching, we don't know how to get exclusive access on RTEMS
  *
  * PARAMETERS: (">" input, "!" modified, "<" output)  
  * (>) pgsub  (struct genSubRecord *)    Pointer to gensub record structure
@@ -118,7 +130,9 @@ long getTime (struct genSubRecord *pgsub)
     CARD_TIMESTAT = (double) 1;			/* failed; no time yet */
     CARD_TIME = (double) 0;			/* no time yet */
     CARD_REGS = (double) 0;			/* no register info yet */
-    CARD_RT_CLOCK = (double) 0;			/* no register info yet */
+    RT_CLOCK = (double) 0;			/* no time yet */
+    MONO_CLOCK = (double) 0;			/* no time yet */
+    MONO_DIFF = (double) 0;			/* no time yet */
 
     /* Read the time from the card if the hardware was found.
      * bc635_read will return return the Bancom card status bits
@@ -146,16 +160,23 @@ long getTime (struct genSubRecord *pgsub)
 	CARD_TIME = rawt;
     }
 
-    struct timespec clockNow;
-
+    struct timespec nowRT, nowMono1, nowMono2;
+    clock_gettime(CLOCK_MONOTONIC, &nowMono1);
     /* If a Hi-Res clock is available and works, use it */
     #ifdef CLOCK_REALTIME_HR
-        clock_gettime(CLOCK_REALTIME_HR, &clockNow) &&
+        clock_gettime(CLOCK_REALTIME_HR, &nowRT) &&
         /* Note: Uses the lo-res clock below if the above call fails */
     #endif
-    clock_gettime(CLOCK_REALTIME, &clockNow);
+    clock_gettime(CLOCK_REALTIME, &nowRT); // We cannot assure that a preemption is not
+    // happening before this clock is read, as we are below ms precision, getting a 2nd
+    // read of the MONOTONIC clock will reveal if there have been some internal delays.
+    // We are forwarding the difference between the 2 MONO reads, that way we will know.
+    clock_gettime(CLOCK_MONOTONIC, &nowMono2);
 
-    CARD_RT_CLOCK = ((double)clockNow.tv_sec) + ((double)clockNow.tv_nsec)/1e9;
+    //RT_CLOCK = ((double)nowRT.tv_sec) + ((double)nowRT.tv_nsec)/1e9;
+    RT_CLOCK = getDoubleTime(&nowRT);
+    MONO_CLOCK = getDoubleTime(&nowMono1);
+    MONO_DIFF = getDoubleTime(&nowMono2)-MONO_CLOCK;
 
     return 0;
 }
