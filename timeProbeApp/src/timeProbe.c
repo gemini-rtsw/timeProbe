@@ -24,7 +24,7 @@
  * read these values in a single get operation.
  */
 #define CARD_CARDSTAT   *((double *) (pgsub->vala) + 0)
-#define CARD_TIMESTA    *((double *) (pgsub->vala) + 1)
+#define CARD_TIMESTAT   *((double *) (pgsub->vala) + 1)
 #define CARD_TIME       *((double *) (pgsub->vala) + 2)
 #define CARD_REGS       *((double *) (pgsub->vala) + 3)
 #define RT_CLOCK        *((double *) (pgsub->vala) + 4)
