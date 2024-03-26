@@ -18,7 +18,7 @@
 
 Summary: %{name} Package, a module for EPICS base
 Name: %{name}
-Version: 1.1.15
+Version: 1.1.16
 Release: 3%{?dist}
 License: EPICS Open License
 Group: Applications/Engineering
@@ -91,6 +91,9 @@ rm -rf $RPM_BUILD_ROOT
    /%{_prefix}/%{name}/configure
 
 %changelog
+* Wed Mar 26 2024 Pedro Gigoux <pedro.gigoux@noirlab.edu> 1.1.16
+- Added card enable
+
 * Mon Jan 11 2021 Ignacio Arriagada <iarriagada@gemini.edu> 1.1.15-3
 - Added latest changes to accomodate ADE2 build and test setup
 - This build uses the fixed version of timelib, which corrects LST error
